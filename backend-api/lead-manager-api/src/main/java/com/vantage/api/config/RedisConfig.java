@@ -11,7 +11,7 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
-@Configuration
+@Configuration // Tells Spring this is a configuration class, calls it when the app starts
 public class RedisConfig {
 
     @Bean
@@ -28,6 +28,7 @@ public class RedisConfig {
         return template;
     }
 
+    // Listens to "link-validation" always, looking for when something comes into the channel
     @Bean
     RedisMessageListenerContainer container(RedisConnectionFactory connectionFactory,
                                             MessageListenerAdapter listenerAdapter) {
@@ -38,8 +39,9 @@ public class RedisConfig {
         return container;
     }
 
+    // Container passes JSON to here
     @Bean
-    MessageListenerAdapter listenerAdapter(LinkWorkerService workerService) {
+    MessageListenerAdapter linkListenerAdapter(LinkWorkerService workerService) {
         // We tell Spring to call the "handleMessage" method in our worker service
         MessageListenerAdapter adapter = new MessageListenerAdapter(workerService, "handleMessage");
 

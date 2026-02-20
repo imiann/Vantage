@@ -9,19 +9,19 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/links")
 public class LinkController {
-    private final LinkService leadService;
+    private final LinkService linkService;
 
-    public LinkController(LinkService leadService) {
-        this.leadService = leadService;
+    public LinkController(LinkService linkService) {
+        this.linkService = linkService;
     }
 
     @PostMapping
     public void addLink(@RequestBody String url) {
-        leadService.createValidationTask(url);
+        linkService.createValidationTask(url);
     }
 
     @GetMapping
     public List<ExternalLink> getAllLinks() {
-        return leadService.getAllLinks();
+        return linkService.getAllLinks();
     }
 }
