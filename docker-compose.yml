@@ -1,0 +1,15 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: dev_password
+      POSTGRES_DB: lead_db
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
