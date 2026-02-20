@@ -1,18 +1,20 @@
 ## Tech Stack
 
-- **Backend:** Java 21, Spring Boot 3.4, Spring Data JPA, Lombok (optional), Spring Security (optional for v1 local auth), SpringDoc OpenAPI (Swagger UI).
+- **Backend:** Java 21, Spring Boot 3.4, Spring Data JPA, Spring Data Redis, Lombok, SpringDoc OpenAPI (Swagger UI).
 - **Database:** PostgreSQL 14+ (local dev via Docker), Flyway or Liquibase for migrations.
+- **Message Broker:** Redis 7+ (local dev via Docker).
 - **Frontend:** React (Vite) + TypeScript, Tailwind CSS, Recharts for charts, Axios for HTTP.
-- **DevOps:** Docker, docker-compose, GitHub Actions (CI), AWS (RDS, EC2) for production.
+- **DevOps:** Docker, docker-compose, GitHub Actions (CI), AWS (RDS, Elasticache, EC2) for production.
 
 ## Folder Structure (recommended)
 
 Backend (Maven/Gradle project):
 
-- `src/main/java/com/yourorg/freelanceapp` — application packages
-  - `config` — Spring configuration, Swagger, CORS, security
+- `src/main/java/com/yourorg/vantage` — application packages
+  - `config` — Spring configuration, Swagger, CORS, Redis
   - `controller` — REST controllers
   - `service` — business logic and transactional services
+  - `worker` — background consumers and workers
   - `repository` — Spring Data JPA repositories
   - `model` or `entity` — JPA entities
   - `dto` — request/response DTOs and mappers
@@ -20,93 +22,59 @@ Backend (Maven/Gradle project):
 
 - `src/main/resources` — `application.yml`, `db/migration` (Flyway)
 
-Frontend:
+## Architecture & Messaging Flow
 
-- `src/` — React app
-  - `components/` — reusable UI components
-  - `pages/` — dashboard, leads, clients, projects
-  - `services/` — Axios wrappers for API calls
-  - `types/` — TypeScript interfaces
+Vantage uses an asynchronous architecture for external link validation to ensure a responsive UI.
+
+```mermaid
+graph LR
+    API[API Service] -->|Push Link Event| Redis[(Redis Queue)]
+    Redis -->|Consume Event| Worker[Worker Service]
+    Worker -->|HEAD Request| Internet(External Link)
+    Worker -->|Update Status| DB[(PostgreSQL)]
+```
+
+- **LinkProducerService:** Pushes a validation message to Redis when a project link is created.
+- **LinkConsumerWorker:** Listens to the Redis queue, performs an asynchronous validation (HEAD request), and updates the `ExternalLink` status in the database.
 
 ## Data Schema
 
-- Entities: `Lead`, `Client`, `Project`.
+- Entities: `Lead`, `Client`, `Project`, `ExternalLink`.
 - Relationships:
   - One `Client` -> Many `Project` (One-to-Many).
-  - A `Lead` is independent until conversion. On conversion: create `Client` and initial `Project` and mark `Lead.status = CONVERTED`.
+  - One `Project` -> Many `ExternalLink` (One-to-Many).
 
-Suggested entity fields (minimal):
+Suggested entity fields:
 
-- `Lead`:
-  - `id: UUID`, `name: String`, `email: String?`, `source: String`, `status: ENUM`, `followUpDate: LocalDateTime?`, `notes: Text`, `createdAt`, `updatedAt`
-- `Client`:
-  - `id: UUID`, `name: String`, `contactInfo`, `createdAt`, `updatedAt`
+- `ExternalLink`:
+  - `id: UUID`, `projectId: UUID`, `url: String`, `name: String`, `status: ENUM (PENDING, VALIDATED, BROKEN)`, `lastChecked: LocalDateTime`
 - `Project`:
-  - `id: UUID`, `clientId: UUID`, `title`, `status: ENUM`, `revenue: BigDecimal`, `versionLinks: JSON/array`, `notes`, `createdAt`, `updatedAt`
+  - `id: UUID`, `clientId: UUID`, `title`, `status: ENUM`, `revenue: BigDecimal`, `notes`, `createdAt`, `updatedAt`
 
-Indexes:
+## API & Asynchrony
 
-- Index `leads(follow_up_date)` and `leads(status)` for fast dashboard queries.
-- Index `projects(status)` where revenue and completed queries will filter.
-
-Migrations:
-
-- Keep schema migrations in `src/main/resources/db/migration` (Flyway) and version each change.
-
-## Backend Components
-
-- **Entities & DTOs:** Use JPA entities for persistence and lightweight DTOs for API boundaries.
-- **Repositories:** Extend `JpaRepository<T, ID>` and add custom queries as needed (`countByStatus`, `findByFollowUpDateBeforeAndStatusNot` etc.).
-- **Services:** Implement business logic (LeadService, ClientService, ProjectService, FinanceService). Unit test each service method with JUnit 5 + Mockito.
-- **Controllers:** REST controllers annotated with `@RestController` and `@RequestMapping("/api/..." )`. Use `@CrossOrigin` in dev or configure CORS globally.
-
-Finance Calculations:
-
-- Conversion rate: `conversionRate = convertedLeads / totalLeads` (handle zero division).
-- Tax reserve: `taxReserve = totalEarned.multiply(config.taxReservePercent)`; make percent configurable via `application.yml`.
-
-## API & Documentation
-
-- Use SpringDoc OpenAPI to generate documentation. Configure UI at `/swagger-ui/index.html`.
+- **Asynchronous Processing:** The `POST /api/projects` endpoint returns `202 Accepted` immediately after the link is queued.
+- **Observability:**
+  - **Health Checks:** Custom actuator endpoints report Redis connection health and queue depth.
+  - **Metrics:** Micrometer tracks `link.validation.latency` (time from Pending to Validated).
 
 ## Local Dev: docker-compose
 
-Example `docker-compose.yml` (skeleton):
-
 ```yaml
-version: '3.8'
+version: "3.8"
 services:
   db:
     image: postgres:14
     environment:
-      POSTGRES_DB: freelance_db
+      POSTGRES_DB: vantage_db
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:
-      - '5432:5432'
-    volumes:
-      - db-data:/var/lib/postgresql/data
-volumes:
-  db-data:
+      - "5432:5432"
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
 ```
 
-Start dev DB with `docker-compose up -d db`.
-
-## CI/CD
-
-- Provide a `GitHub Actions` workflow to run `mvn -DskipTests=false test` (or Gradle equivalent), and run frontend lint/build steps if present.
-
-## Production Deployment (notes)
-
-- **DB:** Use AWS RDS (PostgreSQL) with automated backups and Multi-AZ for resilience.
-- **App:** Package as Docker image and run on EC2 (or ECS) with environment variables for DB and secrets.
-- **Secrets:** Use AWS Secrets Manager or environment variables injected by deployment tooling.
-
-## Observability
-
-- Add Spring Actuator for `/actuator/health`, and optionally metrics export to CloudWatch/Prometheus.
-
-## Notes for Agents
-
-- Prefer simple, testable service methods. Each service method must have a JUnit 5 test using Mockito for dependencies.
-- Use `UUID` primary keys for portability and ease of creating records in tests.
+Start dev services with `docker-compose up -d`.
