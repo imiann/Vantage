@@ -7,13 +7,15 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
-public class LeadService {
+public class LinkService {
 
     private final ExternalLinkRepository repository;
     private final RedisTemplate<String, LinkValidationTask> redisTemplate;
 
-    public LeadService(ExternalLinkRepository repository, RedisTemplate<String, LinkValidationTask> redisTemplate) {
+    public LinkService(ExternalLinkRepository repository, RedisTemplate<String, LinkValidationTask> redisTemplate) {
         this.repository = repository;
         this.redisTemplate = redisTemplate;
     }
@@ -31,5 +33,9 @@ public class LeadService {
 
         // 3. Publish to Redis queue
         redisTemplate.convertAndSend("link-validation", task);
+    }
+
+    public List<ExternalLink> getAllLinks() {
+        return repository.findAll();
     }
 }

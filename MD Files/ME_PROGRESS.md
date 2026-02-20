@@ -3,8 +3,8 @@
 ## Status Table
 
 | Phase       | Step                              | Status      | Checked |
-| :---------- | :-------------------------------- | :---------- | :------ |
-| **Phase 1** | Step 1: Env & Infrastructure Init | Not started |         |
+|:------------|:----------------------------------|:------------|:--------|
+| **Phase 1** | Step 1: Env & Infrastructure Init | Completed   | Yes     |
 |             | Step 2: DB & Message Schema       | Not started |         |
 |             | Step 3: Service Layer & Workers   | Not started |         |
 | **Phase 2** | Step 4: API Layer & Asynchrony    | Not started |         |
