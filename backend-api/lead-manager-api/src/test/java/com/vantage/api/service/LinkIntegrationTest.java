@@ -30,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
-class LinkIntegrationTest {
+public class LinkIntegrationTest {
 
     @Autowired
     private LinkService linkService;
