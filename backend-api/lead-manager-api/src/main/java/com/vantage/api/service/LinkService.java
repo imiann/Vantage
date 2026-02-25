@@ -5,9 +5,11 @@ import com.vantage.api.entity.ExternalLink;
 import com.vantage.api.repository.ExternalLinkRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class LinkService {
@@ -37,5 +39,32 @@ public class LinkService {
 
     public List<ExternalLink> getAllLinks() {
         return repository.findAll();
+    }
+
+    public Optional<ExternalLink> getLinkById(Long id) {
+        return repository.findById(id);
+    }
+
+    @Transactional
+    public ExternalLink updateLink(Long id, String newUrl) {
+        return repository.findById(id).map(link -> {
+
+            // Different url
+            if (!link.getUrl().equals(newUrl)) {
+                link.setUrl(newUrl);
+                link.setStatus(ExternalLink.LinkStatus.PENDING);
+                ExternalLink updatedLink = repository.save(link);
+
+                LinkValidationTask task = new LinkValidationTask(updatedLink.getId(), newUrl);
+                redisTemplate.convertAndSend("link-validation", task);
+                return updatedLink;
+            }
+            // Same url, nothing changed
+            return link;
+        }).orElseThrow(() -> new RuntimeException("Link not found with id " + id));
+    }
+
+    public void deleteLink(Long id) {
+        repository.deleteById(id);
     }
 }
