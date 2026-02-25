@@ -11,6 +11,8 @@ import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.listener.adapter.MessageListenerAdapter;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
+import java.util.concurrent.Executors;
+
 @Configuration // Tells Spring this is a configuration class, calls it when the app starts
 public class RedisConfig {
 
@@ -36,6 +38,9 @@ public class RedisConfig {
         container.setConnectionFactory(connectionFactory);
         // We listen to the exact same channel used in LeadService
         container.addMessageListener(listenerAdapter, new ChannelTopic("link-validation"));
+
+        // Virtual threads, not hardware threads
+        container.setTaskExecutor(Executors.newFixedThreadPool(100));
         return container;
     }
 

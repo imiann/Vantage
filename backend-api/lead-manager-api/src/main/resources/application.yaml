@@ -3,6 +3,8 @@ spring:
     url: jdbc:postgresql://localhost:5432/lead_db
     username: dev_user
     password: dev_password
+    hikari:
+      maximum-pool-size: 50
   jpa:
     hibernate:
       ddl-auto: validate
