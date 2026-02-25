@@ -166,7 +166,7 @@ class LinkIntegrationTest {
         Awaitility.await()
                 .atMost(Duration.ofMinutes(5))
                 .pollInterval(Duration.ofSeconds(1))
-                .until(() -> repository.count() == totalLinks);
+                .until(() -> repository.countByStatus(ExternalLink.LinkStatus.PENDING) == 0);
 
         // Give the context a one-second buffer to finish background cleanup
         Thread.sleep(2000);
