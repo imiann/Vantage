@@ -68,4 +68,8 @@ public class LinkService {
     public void deleteLink(UUID id) {
         repository.deleteById(id);
     }
+
+    public void deleteAllLinks() {
+        repository.deleteAll();
+    }
 }

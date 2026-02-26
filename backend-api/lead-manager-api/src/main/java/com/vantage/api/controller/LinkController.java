@@ -50,4 +50,11 @@ public class LinkController {
     public void deleteLink(@PathVariable UUID id) {
         linkService.deleteLink(id);
     }
+
+    // Delete all
+
+    @DeleteMapping("/DELETEALLCONFIRM")
+    public void deleteAllLinks() {
+        linkService.deleteAllLinks();
+    }
 }

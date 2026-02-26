@@ -27,3 +27,7 @@ https://google.com
 ###
 
 DELETE http://localhost:8080/api/links/5f396a39-9458-4486-8d58-038562548712
+
+###
+
+DELETE http://localhost:8080/api/links/DELETEALLCONFIRM
