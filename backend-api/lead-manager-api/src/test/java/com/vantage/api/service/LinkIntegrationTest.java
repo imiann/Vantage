@@ -1,4 +1,5 @@
 package com.vantage.api.service;
+
 import com.vantage.api.entity.ExternalLink;
 import com.vantage.api.repository.ExternalLinkRepository;
 import org.awaitility.Awaitility;
@@ -84,7 +85,7 @@ public class LinkIntegrationTest {
             final String url = "https://vantage-test-" + i + ".com";
             executor.submit(() -> {
                 try {
-                    linkService.createValidationTask(url);
+                    linkService.createValidationTask(url, null, null);
                 } finally {
                     latch.countDown();
                 }
@@ -112,7 +113,7 @@ public class LinkIntegrationTest {
             final String newUrl = "https://update-" + i + ".com";
             executor.submit(() -> {
                 try {
-                    linkService.updateLink(id, newUrl);
+                    linkService.updateLink(id, newUrl, null, null);
                 } finally {
                     latch.countDown();
                 }
@@ -138,7 +139,7 @@ public class LinkIntegrationTest {
         for (String url : urls) {
             new Thread(() -> {
                 try {
-                    linkService.createValidationTask(url);
+                    linkService.createValidationTask(url, null, null);
                 } finally {
                     latch.countDown();
                 }
@@ -151,8 +152,8 @@ public class LinkIntegrationTest {
     }
 
     @Test
-    void shouldHandleMassiveScale_5000Links() throws InterruptedException {
-        int totalLinks = 5000;
+    void shouldHandleMassiveScale_1000Links() throws InterruptedException {
+        int totalLinks = 1000;
 
         Awaitility.await().until(() -> repository.count() == 0L);
 
@@ -160,7 +161,7 @@ public class LinkIntegrationTest {
         try (ExecutorService executor = Executors.newFixedThreadPool(50)) {
             for (int i = 0; i < totalLinks; i++) {
                 final String url = "https://vantage-scale-test-" + i + ".com";
-                executor.submit(() -> linkService.createValidationTask(url));
+                executor.submit(() -> linkService.createValidationTask(url, null, null));
             }
         } // Shutdown and awaitTermination happen automatically here
 

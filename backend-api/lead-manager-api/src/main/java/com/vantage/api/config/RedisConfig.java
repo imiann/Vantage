@@ -1,7 +1,7 @@
 package com.vantage.api.config;
 
 import com.vantage.api.dto.LinkValidationTask;
-import com.vantage.api.service.LinkWorkerService;
+import com.vantage.api.worker.LinkWorkerService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.connection.RedisConnectionFactory;

@@ -3,9 +3,12 @@ package com.vantage.api.service;
 import com.vantage.api.dto.LinkValidationTask;
 import com.vantage.api.entity.ExternalLink;
 import com.vantage.api.repository.ExternalLinkRepository;
+import com.vantage.api.worker.LinkWorkerService;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -19,9 +22,9 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.*;
 
-// Initialize Mockito
 @ExtendWith(MockitoExtension.class)
 public class LinkWorkerServiceTest {
+
     @Mock
     private ExternalLinkRepository repository;
 
@@ -31,8 +34,14 @@ public class LinkWorkerServiceTest {
     @Mock
     private HttpResponse<Object> httpResponse;
 
-    @InjectMocks
+    private MeterRegistry meterRegistry;
     private LinkWorkerService workerService;
+
+    @BeforeEach
+    void setUp() {
+        meterRegistry = new SimpleMeterRegistry();
+        workerService = new LinkWorkerService(repository, httpClient, meterRegistry);
+    }
 
     // --- SCENARIO 1: LINK IS VALID ---
     @Test
@@ -43,7 +52,6 @@ public class LinkWorkerServiceTest {
         link.setId(linkId);
 
         when(repository.findById(linkId)).thenReturn(Optional.of(link));
-        // Added lenient() here
         lenient().when(httpClient.send(any(), any())).thenReturn(httpResponse);
         lenient().when(httpResponse.statusCode()).thenReturn(200);
 
@@ -66,7 +74,6 @@ public class LinkWorkerServiceTest {
 
         workerService.handleMessage(task);
 
-        // Verify that it is now correctly BROKEN
         verify(repository).save(argThat(l -> l.getStatus() == ExternalLink.LinkStatus.BROKEN));
     }
 
@@ -80,13 +87,11 @@ public class LinkWorkerServiceTest {
         link.setId(linkId);
 
         when(repository.findById(linkId)).thenReturn(Optional.of(link));
-        // Simulate a network exception
         lenient().when(httpClient.send(any(), any())).thenThrow(new IOException("Connection Refused"));
 
         workerService.handleMessage(task);
 
-        verify(repository).save(argThat(updatedLink ->
-                updatedLink.getStatus() == ExternalLink.LinkStatus.BROKEN));
+        verify(repository).save(argThat(updatedLink -> updatedLink.getStatus() == ExternalLink.LinkStatus.BROKEN));
     }
 
     // --- SCENARIO 4: LINK DELETED BEFORE PROCESSING ---
@@ -99,7 +104,6 @@ public class LinkWorkerServiceTest {
 
         workerService.handleMessage(task);
 
-        // Verify we never try to save anything since the record is gone
         verify(repository, never()).save(any());
     }
 }

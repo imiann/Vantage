@@ -1,60 +1,69 @@
 package com.vantage.api.controller;
 
+import com.vantage.api.dto.LinkRequest;
 import com.vantage.api.entity.ExternalLink;
 import com.vantage.api.service.LinkService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/links")
+@Tag(name = "Links", description = "External link management and async validation")
 public class LinkController {
+
     private final LinkService linkService;
 
     public LinkController(LinkService linkService) {
         this.linkService = linkService;
     }
 
-    // Create
+    @Operation(summary = "Queue a new link for async validation")
     @PostMapping
-    public ResponseEntity<Void> addLink(
-            @RequestBody @jakarta.validation.Valid com.vantage.api.dto.LinkRequest request) {
-        linkService.createValidationTask(request.url());
-        return ResponseEntity.accepted().build();
+    public ResponseEntity<ExternalLink> addLink(@RequestBody @Valid LinkRequest request) {
+        ExternalLink created = linkService.createValidationTask(
+                request.url(), request.projectId(), request.name());
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(created);
     }
 
-    // Read all
+    @Operation(summary = "List all external links")
     @GetMapping
-    public List<ExternalLink> getAllLinks() {
-        return linkService.getAllLinks();
+    public ResponseEntity<List<ExternalLink>> getAllLinks() {
+        return ResponseEntity.ok(linkService.getAllLinks());
     }
 
-    // Read one
+    @Operation(summary = "Get a single link by ID")
     @GetMapping("/{id}")
-    public Optional<ExternalLink> getLinkById(@PathVariable UUID id) {
-        return linkService.getLinkById(id);
+    public ResponseEntity<ExternalLink> getLinkById(@PathVariable UUID id) {
+        return ResponseEntity.ok(linkService.getLinkById(id));
     }
 
-    // Update
+    @Operation(summary = "Update an existing link")
     @PutMapping("/{id}")
-    public ExternalLink updateLink(@PathVariable UUID id,
-            @RequestBody @jakarta.validation.Valid com.vantage.api.dto.LinkRequest request) {
-        return linkService.updateLink(id, request.url());
+    public ResponseEntity<ExternalLink> updateLink(@PathVariable UUID id,
+            @RequestBody @Valid LinkRequest request) {
+        ExternalLink updated = linkService.updateLink(
+                id, request.url(), request.projectId(), request.name());
+        return ResponseEntity.ok(updated);
     }
 
-    // Delete
+    @Operation(summary = "Delete a link by ID")
     @DeleteMapping("/{id}")
-    public void deleteLink(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteLink(@PathVariable UUID id) {
         linkService.deleteLink(id);
+        return ResponseEntity.noContent().build();
     }
 
-    // Delete all
-
+    @Operation(summary = "Delete all links (development use only)")
     @DeleteMapping("/DELETEALLCONFIRM")
-    public void deleteAllLinks() {
+    public ResponseEntity<Void> deleteAllLinks() {
         linkService.deleteAllLinks();
+        return ResponseEntity.noContent().build();
     }
 }
