@@ -1,12 +1,17 @@
 package com.vantage.api.entity;
 
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
+import java.util.UUID;
 
-
-@Entity // This tells Hibernate to make a table out of this class
+@Entity
 @Table(name = "external_links")
+@EntityListeners(AuditingEntityListener.class)
 public class ExternalLink {
 
     public enum LinkStatus {
@@ -15,37 +20,60 @@ public class ExternalLink {
         BROKEN
     }
 
-    @Id // Primary key for this table
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(updatable = false, nullable = false)
+    private UUID id;
 
-    @Column(nullable = false, unique = true, length = 500)
+    /** FK to projects.id — nullable; a link may exist without a project. */
+    @Column(name = "project_id")
+    private UUID projectId;
+
+    @Column(nullable = false, length = 2000)
     private String url;
 
+    /** Human-readable label for the link, e.g. "Final Cut v3". Optional. */
+    private String name;
 
-    @Enumerated(EnumType.STRING) // To store "PENDING", "VALIDATED", "BROKEN" instead of 0.
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private LinkStatus status = LinkStatus.PENDING;
+
+    /**
+     * Timestamp of last HEAD-request validation. Null until first check completes.
+     */
+    @Column(name = "last_checked")
+    private LocalDateTime lastChecked;
+
+    @CreatedDate
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
     // Constructors
 
     public ExternalLink() {
     }
 
-    public ExternalLink(String url, LinkStatus status) {
-        this.url = url;
-        this.status = status;
-    }
-
-
     // Getters and Setters
 
-    public Long getId() {
+    public UUID getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(UUID id) {
         this.id = id;
+    }
+
+    public UUID getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(UUID projectId) {
+        this.projectId = projectId;
     }
 
     public String getUrl() {
@@ -56,6 +84,14 @@ public class ExternalLink {
         this.url = url;
     }
 
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public LinkStatus getStatus() {
         return status;
     }
@@ -64,15 +100,40 @@ public class ExternalLink {
         this.status = status;
     }
 
+    public LocalDateTime getLastChecked() {
+        return lastChecked;
+    }
+
+    public void setLastChecked(LocalDateTime lastChecked) {
+        this.lastChecked = lastChecked;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public void setUpdatedAt(LocalDateTime updatedAt) {
+        this.updatedAt = updatedAt;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
+        if (o == null || getClass() != o.getClass())
+            return false;
         ExternalLink that = (ExternalLink) o;
-        return Objects.equals(id, that.id) && Objects.equals(url, that.url) && status == that.status;
+        return Objects.equals(id, that.id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, url, status);
+        return Objects.hash(id);
     }
 }

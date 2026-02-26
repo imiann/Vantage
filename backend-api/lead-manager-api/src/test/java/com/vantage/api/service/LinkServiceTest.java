@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -33,7 +34,7 @@ public class LinkServiceTest {
     void shouldSaveLinkAndSendMessage() {
         String url = "https://test.com";
         ExternalLink savedLink = new ExternalLink();
-        savedLink.setId(100L);
+        savedLink.setId(UUID.randomUUID());
         savedLink.setUrl(url);
 
         when(repository.save(any(ExternalLink.class))).thenReturn(savedLink);
@@ -58,7 +59,7 @@ public class LinkServiceTest {
     // --- UPDATE (URL CHANGED) ---
     @Test
     void shouldUpdateUrlAndTriggerNewValidation() {
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
         String oldUrl = "https://old.com";
         String newUrl = "https://new.com";
 
@@ -80,7 +81,7 @@ public class LinkServiceTest {
     // --- UPDATE (URL SAME) ---
     @Test
     void shouldNotTriggerRedisIfUrlIsSame() {
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
         String url = "https://same.com";
         ExternalLink existingLink = new ExternalLink();
         existingLink.setId(id);
@@ -98,7 +99,7 @@ public class LinkServiceTest {
     // --- DELETE ---
     @Test
     void shouldDeleteLink() {
-        Long id = 1L;
+        UUID id = UUID.randomUUID();
 
         linkService.deleteLink(id);
 

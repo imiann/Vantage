@@ -18,13 +18,19 @@ public class LinkWorkerService {
     private final ExternalLinkRepository repository;
     private final HttpClient httpClient;
 
-    public LinkWorkerService(ExternalLinkRepository repository) {
+    public LinkWorkerService(ExternalLinkRepository repository, HttpClient httpClient) {
         this.repository = repository;
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(5))
-                .build();
+        this.httpClient = httpClient;
     }
 
+    @org.springframework.beans.factory.annotation.Autowired
+    public LinkWorkerService(ExternalLinkRepository repository) {
+        this(repository, HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .build());
+    }
+
+    @org.springframework.transaction.annotation.Transactional
     public void handleMessage(LinkValidationTask task) {
         System.out.println("Processing task for URL: " + task.url());
 
@@ -44,6 +50,7 @@ public class LinkWorkerService {
             // 3. Update the database
             repository.findById(task.id()).ifPresent(link -> {
                 link.setStatus(finalStatus);
+                link.setLastChecked(java.time.LocalDateTime.now());
                 repository.save(link);
                 System.out.println("Updated link " + task.id() + " to " + finalStatus);
             });
@@ -52,6 +59,7 @@ public class LinkWorkerService {
             // If the domain doesn't exist or times out, it's BROKEN
             repository.findById(task.id()).ifPresent(link -> {
                 link.setStatus(LinkStatus.BROKEN);
+                link.setLastChecked(java.time.LocalDateTime.now());
                 repository.save(link);
             });
         }

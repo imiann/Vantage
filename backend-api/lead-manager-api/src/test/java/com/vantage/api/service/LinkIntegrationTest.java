@@ -21,6 +21,7 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -30,6 +31,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 public class LinkIntegrationTest {
 
     @Autowired
@@ -101,7 +103,7 @@ public class LinkIntegrationTest {
         link.setStatus(ExternalLink.LinkStatus.VALIDATED);
         link = repository.save(link);
 
-        Long id = link.getId();
+        UUID id = link.getId();
         int threadCount = 10;
         ExecutorService executor = Executors.newFixedThreadPool(threadCount);
         CountDownLatch latch = new CountDownLatch(threadCount);

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Service
 public class LinkService {
@@ -41,12 +42,12 @@ public class LinkService {
         return repository.findAll();
     }
 
-    public Optional<ExternalLink> getLinkById(Long id) {
+    public Optional<ExternalLink> getLinkById(UUID id) {
         return repository.findById(id);
     }
 
     @Transactional
-    public ExternalLink updateLink(Long id, String newUrl) {
+    public ExternalLink updateLink(UUID id, String newUrl) {
         return repository.findById(id).map(link -> {
 
             // Different url
@@ -64,7 +65,7 @@ public class LinkService {
         }).orElseThrow(() -> new RuntimeException("Link not found with id " + id));
     }
 
-    public void deleteLink(Long id) {
+    public void deleteLink(UUID id) {
         repository.deleteById(id);
     }
 }

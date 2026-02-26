@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/links")
@@ -19,8 +20,9 @@ public class LinkController {
 
     // Create
     @PostMapping
-    public void addLink(@RequestBody String url) {
-        linkService.createValidationTask(url);
+    public ResponseEntity<Void> addLink(@RequestBody @jakarta.validation.Valid com.vantage.api.dto.LinkRequest request) {
+        linkService.createValidationTask(request.url());
+        return ResponseEntity.accepted().build();
     }
 
     // Read all
@@ -31,19 +33,19 @@ public class LinkController {
 
     // Read one
     @GetMapping("/{id}")
-    public Optional<ExternalLink> getLinkById(@PathVariable Long id) {
+    public Optional<ExternalLink> getLinkById(@PathVariable UUID id) {
         return linkService.getLinkById(id);
     }
 
     // Update
     @PutMapping("/{id}")
-    public ExternalLink updateLink(@PathVariable Long id, @RequestBody String newUrl) {
-        return linkService.updateLink(id, newUrl);
+    public ExternalLink updateLink(@PathVariable UUID id, @RequestBody @jakarta.validation.Valid com.vantage.api.dto.LinkRequest request) {
+        return linkService.updateLink(id, request.url());
     }
 
     // Delete
     @DeleteMapping("/{id}")
-    public void deleteLink(@PathVariable Long id) {
+    public void deleteLink(@PathVariable UUID id) {
         linkService.deleteLink(id);
     }
 }

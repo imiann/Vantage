@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.net.http.HttpClient;
 import java.net.http.HttpResponse;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -36,7 +37,7 @@ public class LinkWorkerServiceTest {
     // --- SCENARIO 1: LINK IS VALID ---
     @Test
     void shouldMarkAsValidatedWhenHttpStatusIs200() throws Exception {
-        Long linkId = 1L;
+        UUID linkId = UUID.randomUUID();
         LinkValidationTask task = new LinkValidationTask(linkId, "https://google.com");
         ExternalLink link = new ExternalLink();
         link.setId(linkId);
@@ -54,7 +55,7 @@ public class LinkWorkerServiceTest {
     // --- SCENARIO 2: LINK IS BROKEN (404) ---
     @Test
     void shouldMarkAsBrokenWhenHttpStatusIs404() throws Exception {
-        Long linkId = 2L;
+        UUID linkId = UUID.randomUUID();
         LinkValidationTask task = new LinkValidationTask(linkId, "https://bad-url.com");
         ExternalLink link = new ExternalLink();
         link.setId(linkId);
@@ -72,7 +73,7 @@ public class LinkWorkerServiceTest {
     // --- SCENARIO 3: NETWORK ERROR (TIMEOUT/DNS) ---
     @Test
     void shouldMarkAsBrokenWhenConnectionFails() throws Exception {
-        Long linkId = 3L;
+        UUID linkId = UUID.randomUUID();
         LinkValidationTask task = new LinkValidationTask(linkId, "https://non-existent-site.test");
 
         ExternalLink link = new ExternalLink();
@@ -91,7 +92,7 @@ public class LinkWorkerServiceTest {
     // --- SCENARIO 4: LINK DELETED BEFORE PROCESSING ---
     @Test
     void shouldDoNothingIfLinkNotFoundInDb() {
-        Long linkId = 99L;
+        UUID linkId = UUID.randomUUID();
         LinkValidationTask task = new LinkValidationTask(linkId, "https://github.com");
 
         when(repository.findById(linkId)).thenReturn(Optional.empty());

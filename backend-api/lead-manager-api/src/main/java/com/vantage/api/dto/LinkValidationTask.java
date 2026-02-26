@@ -1,6 +1,7 @@
 package com.vantage.api.dto;
 
 import java.io.Serializable;
+import java.util.UUID;
 
 /**
  *  Represents the message payload sent to Redis for the worker to process.
@@ -11,6 +12,6 @@ import java.io.Serializable;
  */
 
 public record LinkValidationTask(
-        Long id,
+        UUID id,
         String url
 ) implements Serializable  {}
