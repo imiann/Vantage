@@ -4,12 +4,10 @@ import com.vantage.api.entity.ExternalLink;
 import com.vantage.api.repository.ExternalLinkRepository;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.redis.core.ReactiveRedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.DynamicPropertyRegistry;
@@ -27,7 +25,6 @@ import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -67,6 +64,7 @@ public class LinkIntegrationTest {
     @BeforeEach
     void setUp() {
         redisMessageListenerContainer.stop();
+        assert redisMessageListenerContainer.getConnectionFactory() != null;
         redisMessageListenerContainer.getConnectionFactory().getConnection().serverCommands().flushDb();
         repository.deleteAll();
         redisMessageListenerContainer.start();
