@@ -6,6 +6,10 @@ spring:
     hikari:
       maximum-pool-size: 50
   jpa:
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
     hibernate:
       ddl-auto: validate
   data:
