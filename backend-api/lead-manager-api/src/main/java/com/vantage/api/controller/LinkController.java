@@ -20,7 +20,8 @@ public class LinkController {
 
     // Create
     @PostMapping
-    public ResponseEntity<Void> addLink(@RequestBody @jakarta.validation.Valid com.vantage.api.dto.LinkRequest request) {
+    public ResponseEntity<Void> addLink(
+            @RequestBody @jakarta.validation.Valid com.vantage.api.dto.LinkRequest request) {
         linkService.createValidationTask(request.url());
         return ResponseEntity.accepted().build();
     }
@@ -39,7 +40,8 @@ public class LinkController {
 
     // Update
     @PutMapping("/{id}")
-    public ExternalLink updateLink(@PathVariable UUID id, @RequestBody @jakarta.validation.Valid com.vantage.api.dto.LinkRequest request) {
+    public ExternalLink updateLink(@PathVariable UUID id,
+            @RequestBody @jakarta.validation.Valid com.vantage.api.dto.LinkRequest request) {
         return linkService.updateLink(id, request.url());
     }
 
