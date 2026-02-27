@@ -6,13 +6,17 @@ import org.junit.platform.suite.api.ConfigurationParameter;
 
 @Suite
 @SelectClasses({
-        //com.vantage.api.LeadManagerApiApplicationTests.class,
-        //com.vantage.api.service.LinkServiceTest.class,
-        //com.vantage.api.service.LinkWorkerServiceTest.class,
-        //com.vantage.api.service.LinkIntegrationTest.class,
-        //com.vantage.api.controller.LinkControllerTest.class,
+        com.vantage.api.LeadManagerApiApplicationTests.class,
+        com.vantage.api.service.LinkServiceTest.class,
+        com.vantage.api.service.LinkWorkerServiceTest.class,
+        com.vantage.api.service.LinkIntegrationTest.class,
+        com.vantage.api.controller.LinkControllerTest.class,
         com.vantage.api.service.LeadServiceTest.class,
-        com.vantage.api.controller.LeadControllerTest.class
+        com.vantage.api.controller.LeadControllerTest.class,
+        com.vantage.api.service.ClientServiceTest.class,
+        com.vantage.api.controller.ClientControllerTest.class,
+        com.vantage.api.service.ProjectServiceTest.class,
+        com.vantage.api.controller.ProjectControllerTest.class
 })
 @ConfigurationParameter(key = "junit.platform.launcher.interceptors.enabled", value = "true")
 public class TestMetricsSuite {

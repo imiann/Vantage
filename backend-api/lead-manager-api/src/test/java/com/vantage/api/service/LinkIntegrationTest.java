@@ -173,7 +173,7 @@ public class LinkIntegrationTest {
 
         // Wait for the separate Worker threads to finish writing to the DB
         Awaitility.await()
-                .atMost(Duration.ofMinutes(5))
+                .atMost(Duration.ofMinutes(1))
                 .pollInterval(Duration.ofSeconds(1))
                 .until(() -> repository.countByStatus(ExternalLink.LinkStatus.PENDING) == 0);
 

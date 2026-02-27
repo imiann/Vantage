@@ -2,8 +2,10 @@ package com.vantage.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vantage.api.dto.LeadRequest;
+import com.vantage.api.entity.Client;
 import com.vantage.api.entity.Lead;
 import com.vantage.api.exception.ResourceNotFoundException;
+import com.vantage.api.service.ClientService;
 import com.vantage.api.service.LeadService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -29,6 +31,9 @@ public class LeadControllerTest {
 
     @MockitoBean
     private LeadService leadService;
+
+    @MockitoBean
+    private ClientService clientService;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -141,25 +146,25 @@ public class LeadControllerTest {
     }
 
     @Test
-    @DisplayName("POST /api/leads/{id}/convert should return 200 OK")
-    void convertLead_ReturnsOk() throws Exception {
+    @DisplayName("POST /api/leads/{id}/convert should return 201 Created")
+    void convertLead_ReturnsCreated() throws Exception {
         UUID id = UUID.randomUUID();
-        Lead lead = new Lead();
-        lead.setId(id);
-        lead.setStatus(Lead.LeadStatus.CONVERTED);
+        Client client = new Client();
+        client.setId(UUID.randomUUID());
+        client.setFullName("Converted Client");
 
-        when(leadService.convertLead(id)).thenReturn(lead);
+        when(clientService.convertLeadToClient(id)).thenReturn(client);
 
         mockMvc.perform(post("/api/leads/{id}/convert", id))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("CONVERTED"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.fullName").value("Converted Client"));
     }
 
     @Test
     @DisplayName("POST /api/leads/{id}/convert should return 409 Conflict when terminal")
     void convertLead_Terminal_ReturnsConflict() throws Exception {
         UUID id = UUID.randomUUID();
-        when(leadService.convertLead(id)).thenThrow(new IllegalStateException("Already converted"));
+        when(clientService.convertLeadToClient(id)).thenThrow(new IllegalStateException("Already converted"));
 
         mockMvc.perform(post("/api/leads/{id}/convert", id))
                 .andExpect(status().isConflict());

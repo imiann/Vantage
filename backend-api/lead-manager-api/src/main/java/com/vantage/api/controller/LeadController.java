@@ -1,7 +1,9 @@
 package com.vantage.api.controller;
 
 import com.vantage.api.dto.LeadRequest;
+import com.vantage.api.entity.Client;
 import com.vantage.api.entity.Lead;
+import com.vantage.api.service.ClientService;
 import com.vantage.api.service.LeadService;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.validation.Valid;
@@ -17,9 +19,11 @@ import java.util.UUID;
 @RequestMapping("/api/leads")
 public class LeadController {
     private final LeadService leadService;
+    private final ClientService clientService;
 
-    public LeadController(LeadService leadService) {
+    public LeadController(LeadService leadService, ClientService clientService) {
         this.leadService = leadService;
+        this.clientService = clientService;
     }
 
     @Operation(summary = "Create a new lead")
@@ -89,9 +93,8 @@ public class LeadController {
 
     @Operation(summary = "Convert a lead to a client")
     @PostMapping("/{id}/convert")
-    public ResponseEntity<Lead> convertLead(@PathVariable UUID id) {
-        // TODO: This lead now becomes a client, create a new client with the leads values
-        return ResponseEntity.ok(leadService.convertLead(id));
+    public ResponseEntity<Client> convertLead(@PathVariable UUID id) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(clientService.convertLeadToClient(id));
     }
 
 }
