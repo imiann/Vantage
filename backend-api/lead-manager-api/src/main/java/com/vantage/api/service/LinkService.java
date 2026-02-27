@@ -64,6 +64,7 @@ public class LinkService {
      *
      * @throws ResourceNotFoundException if not found
      */
+
     @Transactional
     public ExternalLink updateLink(UUID id, String newUrl, UUID projectId, String name) {
         ExternalLink link = repository.findById(id)

@@ -1,8 +1,17 @@
 package com.vantage.api.controller;
 
+import com.vantage.api.dto.LeadRequest;
+import com.vantage.api.entity.Lead;
 import com.vantage.api.service.LeadService;
+import io.swagger.v3.oas.annotations.Operation;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/leads")
@@ -13,46 +22,76 @@ public class LeadController {
         this.leadService = leadService;
     }
 
-    /**
+    @Operation(summary = "Create a new lead")
     @PostMapping
-    public ResponseEntity<LeadResponse> createLead() {
-        leadService.createLead();
-        return null;
+    public ResponseEntity<Lead> createLead(@RequestBody @Valid LeadRequest leadRequest) {
+        Lead createdLead = leadService.createLead(
+                leadRequest.name(),
+                leadRequest.email(),
+                leadRequest.phone(),
+                leadRequest.company(),
+                leadRequest.source(),
+                leadRequest.notes(),
+                leadRequest.status()
+        );
+        // Return 202 if good
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdLead);
     }
 
+    @Operation(summary = "List all leads, optionally filtered by status")
     @GetMapping
-    public void getAllLeads() {
-        leadService.getAllLeads();
+    public ResponseEntity<List<Lead>> getAllLeads(@RequestParam(required = false) Optional<Lead.LeadStatus> status) {
+        return status.map(leadStatus -> ResponseEntity.ok(leadService.getLeadsByStatus(leadStatus)))
+                .orElseGet(() -> ResponseEntity.ok(leadService.getAllLeads()));
     }
 
-    @GetMapping
-    public void getLeadById() {
-        leadService.getLeadById();
+    @Operation(summary = "Get a single lead by ID")
+    @GetMapping("/{id}")
+    public ResponseEntity<Lead> getLeadById(@PathVariable UUID id) {
+        return ResponseEntity.ok(leadService.getLeadById(id));
     }
 
-    @PutMapping
-    public void updateLead() {
-        leadService.updateLead();
+    @Operation(summary = "Update an existing lead by ID")
+    @PutMapping("/{id}")
+    public ResponseEntity<Lead> updateLead(@PathVariable UUID id, @RequestBody @Valid LeadRequest leadRequest) {
+        Lead updated = leadService.updateLead(
+                id,
+                leadRequest.name(),
+                leadRequest.email(),
+                leadRequest.phone(),
+                leadRequest.company(),
+                leadRequest.source(),
+                leadRequest.notes(),
+                leadRequest.status());
+
+        return ResponseEntity.ok(updated);
     }
 
-    @DeleteMapping
-    public void deleteLead() {
-        leadService.deleteLead();
+    @Operation(summary = "Delete a lead by ID")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteLead(@PathVariable UUID id) {
+        leadService.deleteLead(id);
+        return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping
-    public void deleteAllLeads() {
+    @Operation(summary = "Delete all leads (development use only)")
+    @DeleteMapping("/DELETEALL")
+    public ResponseEntity<Void> deleteAllLeads() {
         leadService.deleteAllLeads();
+        return ResponseEntity.noContent().build();
     }
 
-    @PatchMapping
-    public void updateStatus() {
-        leadService.updateStatus();
+    @Operation(summary = "Update the status of a lead")
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Lead> updateStatus(@PathVariable UUID id, @RequestBody Lead.LeadStatus status) {
+        return ResponseEntity.ok(leadService.updateStatus(id, status));
     }
 
-    @PostMapping
-    public void convertLead() {
-        leadService.convertLead();
+    @Operation(summary = "Convert a lead to a client")
+    @PostMapping("/{id}/convert")
+    public ResponseEntity<Lead> convertLead(@PathVariable UUID id) {
+        // TODO: This lead now becomes a client, create a new client with the leads values
+        return ResponseEntity.ok(leadService.convertLead(id));
     }
-    **/
+
 }
