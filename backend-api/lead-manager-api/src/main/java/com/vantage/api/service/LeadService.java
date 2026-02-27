@@ -46,6 +46,8 @@ public class LeadService {
         Lead lead = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead", id));
 
+        validateTerminalStatus(lead, "updated");
+
         lead.setName(name);
         lead.setEmail(email);
         lead.setPhone(phone);
@@ -57,14 +59,11 @@ public class LeadService {
     }
 
     public void deleteLead(UUID id) {
-        if (!repository.existsById(id)) {
-            throw new ResourceNotFoundException("Lead", id);
-        }
-        // If status is "CONVERTED" reject with 409
-        Lead lead = repository.findById(id).get();
-        if (lead.getStatus() == Lead.LeadStatus.CONVERTED) {
-            throw new IllegalStateException("Lead cannot be deleted because it has already been converted.");
-        }
+        Lead lead = repository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Lead", id));
+
+        validateTerminalStatus(lead, "deleted");
+
         repository.deleteById(id);
     }
 
@@ -76,12 +75,10 @@ public class LeadService {
         Lead lead = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead", id));
 
-        if (lead.getStatus() == Lead.LeadStatus.CONVERTED) {
-            throw new IllegalStateException("Lead cannot be updated because it has already been converted.");
-        }
+        validateTerminalStatus(lead, "updated");
 
-        if (lead.getStatus() == Lead.LeadStatus.LOST) {
-            throw new IllegalStateException("Lead cannot be updated because it has already been lost.");
+        if (status == Lead.LeadStatus.CONVERTED) {
+            throw new IllegalStateException("Lead status cannot be set to CONVERTED via this endpoint. Use convertLead instead.");
         }
 
         lead.setStatus(status);
@@ -92,16 +89,20 @@ public class LeadService {
         Lead lead = repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Lead", id));
 
-        if (lead.getStatus() == Lead.LeadStatus.CONVERTED) {
-            throw new IllegalStateException("Lead cannot be converted because it has already been converted.");
-        }
-
-        if (lead.getStatus() == Lead.LeadStatus.LOST) {
-            throw new IllegalStateException("Lead cannot be converted because it has already been lost.");
-        }
+        validateTerminalStatus(lead, "converted");
 
         lead.setStatus(Lead.LeadStatus.CONVERTED);
         lead.setConvertedAt(java.time.LocalDateTime.now());
         return repository.save(lead);
+    }
+
+    private void validateTerminalStatus(Lead lead, String action) {
+        if (lead.getStatus() == Lead.LeadStatus.CONVERTED) {
+            throw new IllegalStateException("Lead cannot be " + action + " because it has already been converted.");
+        }
+
+        if (lead.getStatus() == Lead.LeadStatus.LOST) {
+            throw new IllegalStateException("Lead cannot be " + action + " because it has already been lost.");
+        }
     }
 }
