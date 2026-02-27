@@ -7,4 +7,6 @@ import java.util.UUID;
 
 public interface ProjectRepository extends JpaRepository<Project, UUID> {
     long countByStatus(Project.ProjectStatus status);
+    boolean existsByClientId(UUID clientId);
+    java.util.List<Project> findByClientId(UUID clientId);
 }
