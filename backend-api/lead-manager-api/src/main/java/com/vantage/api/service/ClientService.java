@@ -76,7 +76,7 @@ public class ClientService {
     public Client convertLeadToClient(UUID leadId) {
         Lead lead = leadService.getLeadById(leadId);
         
-        // This triggers the Lead transition and validation
+        // This converts it
         leadService.convertLead(leadId);
 
         Client client = new Client();
